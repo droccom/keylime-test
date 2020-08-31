@@ -1,8 +1,8 @@
 BURST_LEN=10
 BURST_CNT=2
 
-IMA_WHITELIST_PATH="~/whitelist.txt" # on the tenant
-IMA_EXCLUDE_PATH="~/exclude.txt" # on the tenant
+IMA_WHITELIST_PATH="/KL/keylime/archive/ima/whitelist.txt" # on the tenant
+IMA_EXCLUDE_PATH="/ima_exclude.txt" # on the tenant
 
 if [ $# -lt 4 ]; then
     echo "usage: $0 TENANT_IP VERIFIER_IP AGENT_IP AGENT_UUID"
@@ -26,29 +26,25 @@ if [ ! $? -eq 0 ]; then
     exit
 fi
 
-echo "> generating the executables"
+echo "> generating the executables and whitelist"
 if [ ! -f imabursts-execs.tar.gz ]; then
     tmp=$(mktemp -d)
     cd $tmp
+    rm -f imabursts-whitelist.txt
     for i in $(seq 1 $(($BURST_LEN * $BURST_CNT))); do
         echo "#!/bin/bash" > helloworld$i
         echo "echo hello, world number $i!" >> helloworld$i
         chmod u+x helloworld$i
+        sha1sum helloworld$i \
+            | sed "s/helloworld/\/usr\/local\/bin\/helloworld/" \
+            >> imabursts-whitelist.txt
     done
     tar -cf imabursts-execs.tar.gz helloworld*
     cd -
-    mv $tmp/imabursts-execs.tar.gz .
+    mv $tmp/imabursts-execs.tar.gz $tmp/imabursts-whitelist.txt .
     rm -rf $tmp
 else
     echo "> INFO: using cached executables"
-fi
-
-echo "> calculating the delta whitelist"
-if [ ! -f imabursts-whitelist.txt ]; then
-    # TODO
-    touch imabursts-whitelist.txt
-else
-    echo "> INFO: using cached whitelist"
 fi
 
 echo "> uploading the whitelist to the tenant"

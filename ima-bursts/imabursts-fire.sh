@@ -12,7 +12,7 @@ BURST_CNT=$1; shift
 fcnt=1
 for bi in $(seq 1 $BURST_LEN); do
     for bj in $(seq 1 $BURST_CNT); do
-        $PREFIX$fcnt
+        $PREFIX$fcnt > /dev/null
         fcnt=$((fcnt+1))
     done
 done
