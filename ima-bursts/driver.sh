@@ -14,6 +14,18 @@ VERIFIER_IP=$1; shift
 AGENT_IP=$1; shift
 AGENT_UUID=$1; shift
 
+echo "> testing SSH connections"
+ssh -q root@$TENANT_IP exit
+if [ ! $? -eq 0 ]; then
+    echo "error: cannot SSH to tenant at $TENANT_IP"
+    exit
+fi
+ssh -q root@$AGENT_IP exit
+if [ ! $? -eq 0 ]; then
+    echo "error: cannot SSH to agent at $AGENT_IP"
+    exit
+fi
+
 echo "> generating the executables"
 if [ ! -f imabursts-execs.tar.gz ]; then
     tmp=$(mktemp -d)
@@ -48,9 +60,13 @@ ssh root@$TENANT_IP ./imabursts-update-whitelist.sh \
     $IMA_WHITELIST_PATH imabursts-whitelist.txt \
     $IMA_EXCLUDE_PATH $VERIFIER_IP $AGENT_IP $AGENT_UUID
 
+# TODO refine
+echo "wait until whitelist has been updated"
+sleep 10
+
 echo "> uploading and launching the executables on the agent"
-scp imabursts-execs.tar.gz imabursts-fire.sh root@$TENANT_IP:
-ssh root@$TENANT_IP tar -xf imabursts-execs.tar.gz -C /usr/local/bin
-ssh root@$TENANT_IP ./imabursts-fire.sh \
+scp imabursts-execs.tar.gz imabursts-fire.sh root@$AGENT_IP:
+ssh root@$AGENT_IP tar -xf imabursts-execs.tar.gz -C /usr/local/bin
+ssh root@$AGENT_IP ./imabursts-fire.sh \
     /usr/local/bin/helloworld \
     $BURST_LEN $BURST_CNT
