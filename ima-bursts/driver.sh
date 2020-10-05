@@ -1,5 +1,6 @@
 BURST_LEN=10
 BURST_CNT=2
+BURST_WAIT_LIMIT=10
 
 IMA_WHITELIST_PATH="/KL/keylime/archive/ima/whitelist.txt" # on the tenant
 IMA_EXCLUDE_PATH="/ima_exclude.txt" # on the tenant
@@ -16,12 +17,16 @@ AGENT_UUID=$1; shift
 
 echo "> testing SSH connections"
 ssh -q root@$TENANT_IP exit
-if [ ! $? -eq 0 ]; then
+if [ $? -eq 0 ]; then
+    echo "OK: can SSH to tenant at $TENANT_IP"
+else
     echo "error: cannot SSH to tenant at $TENANT_IP"
     exit
 fi
 ssh -q root@$AGENT_IP exit
-if [ ! $? -eq 0 ]; then
+if [ $? -eq 0 ]; then
+    echo "OK: can SSH to tenant at $AGENT_IP"
+else
     echo "error: cannot SSH to agent at $AGENT_IP"
     exit
 fi
@@ -57,7 +62,7 @@ ssh root@$TENANT_IP ./imabursts-update-whitelist.sh \
     $IMA_EXCLUDE_PATH $VERIFIER_IP $AGENT_IP $AGENT_UUID
 
 # TODO refine
-echo "wait until whitelist has been updated"
+echo "> waiting until whitelist has been updated"
 sleep 10
 
 echo "> uploading and launching the executables on the agent"
@@ -65,4 +70,4 @@ scp imabursts-execs.tar.gz imabursts-fire.sh root@$AGENT_IP:
 ssh root@$AGENT_IP tar -xf imabursts-execs.tar.gz -C /usr/local/bin
 ssh root@$AGENT_IP ./imabursts-fire.sh \
     /usr/local/bin/helloworld \
-    $BURST_LEN $BURST_CNT
+    $BURST_LEN $BURST_CNT $BURST_WAIT_LIMIT
