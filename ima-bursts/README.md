@@ -23,5 +23,6 @@ The top-level script is `driver.sh` and it is operated as follows:
 - `user@100.64.8.10` is the SSH command line to access the tenant
 - `100.64.8.10` is the IP addres of the verifier
 - `100.64.8.17` is the IP address of the agent which will execute the bursts
+- `88A83D79-DE8E-50B3-A922-78DF01A35CD2` is the UUID of the agent
 
 Once the test is completed, you can check the status of the deployment with the `health-check` tool.
