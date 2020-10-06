@@ -17,7 +17,7 @@ This test assumes the following conditions:
 The top-level script is `driver.sh` and it is operated as follows:
 
 ```bash
-./driver.sh cssf8-uc 100.64.8.10 100.64.8.17 88A83D79-DE8E-50B3-A922-78DF01A35CD2
+./driver.sh user@100.64.8.10 100.64.8.10 100.64.8.17 88A83D79-DE8E-50B3-A922-78DF01A35CD2
 ```
 
 - `user@100.64.8.10` is the SSH command line to access the tenant
