@@ -7,7 +7,7 @@ This test monitors the health status of a Keylime deployment.
 The top-level script is `driver.sh` and it is operated as follows: 
 
 ```bash
-./driver.sh user@127.0.0.1 DOCKER 20
+./driver.sh user@100.64.8.10 DOCKER 20
 ```
 
 - `user@100.64.8.10` is the SSH command line to access the verifier
