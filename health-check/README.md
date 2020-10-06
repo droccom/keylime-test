@@ -1,4 +1,8 @@
+# Keylime test: health-check
+
 This test monitors the health status of a Keylime deployment.
+
+## Operations
 
 The top-level script is `driver.sh` and it is operated as follows: 
 
@@ -6,8 +10,8 @@ The top-level script is `driver.sh` and it is operated as follows:
 ./driver.sh user@127.0.0.1 DOCKER 20
 ```
 
-- `user@127.0.0.1` is the SSH command line to access the verifier node
-- `DOCKER` denotes Keylime components are running in docker containers (alt. `BAREMETAL`)
+- `user@100.64.8.10` is the SSH command line to access the verifier
+- `DOCKER` denotes Keylime components are running in docker containers (alt. `BAREMETAL` to denote they run as plain services)
 - `20` is the tail length at which logs are scanned for unhealthy agents (rule of thumb: twice the number of agents)
 
 The output is continuously updated (i.e. `watch`) and looks like the following:
@@ -35,5 +39,6 @@ The output includes:
 - the latest entry of the verifier's log, to double-check everything is up and running
 
 We say a deployment is *fully healthy* if both:
+
 - `deployed agents` = `healthy agents`, i.e. no agents failed
 - `deployed agents` is the total number of agents (i.e. deployment is complete)
