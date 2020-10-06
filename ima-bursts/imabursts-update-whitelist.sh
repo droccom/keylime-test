@@ -31,6 +31,7 @@ echo "[$0] cleaned whitelist entries: $(wc -l $WL_CLEANED_HOST)"
 
 # extend whitelist
 WL_EXT=$(mktemp)
+sed -i '/helloworld/ d' $WL_CLEANED_HOST
 cat $WL_CLEANED_HOST $WL_UPDATE > $WL_EXT
 echo "[$0] whitelist update entries: $(wc -l $WL_UPDATE)"
 wc -l $WL_EXT

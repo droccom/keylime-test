@@ -1,3 +1,5 @@
+#!/bin/bash
+
 BURST_LEN=10
 BURST_CNT=2
 BURST_WAIT_LIMIT=10
@@ -6,58 +8,47 @@ IMA_WHITELIST_PATH="/KL/keylime/archive/ima/whitelist.txt" # on the tenant
 IMA_EXCLUDE_PATH="/ima_exclude.txt" # on the tenant
 
 if [ $# -lt 4 ]; then
-    echo "usage: $0 TENANT_IP VERIFIER_IP AGENT_IP AGENT_UUID"
+    echo "usage: $0 [user@]TENANT_HOST VERIFIER_IP AGENT_IP AGENT_UUID"
     exit
 fi
 
-TENANT_IP=$1; shift
+TENANT_HOST=$1; shift
 VERIFIER_IP=$1; shift
 AGENT_IP=$1; shift
 AGENT_UUID=$1; shift
 
 echo "> testing SSH connections"
-ssh -q root@$TENANT_IP exit
+ssh -q $TENANT_HOST exit
 if [ $? -eq 0 ]; then
-    echo "OK: can SSH to tenant at $TENANT_IP"
+    echo "OK: SSH access $TENANT_HOST"
 else
-    echo "error: cannot SSH to tenant at $TENANT_IP"
-    exit
-fi
-ssh -q root@$AGENT_IP exit
-if [ $? -eq 0 ]; then
-    echo "OK: can SSH to tenant at $AGENT_IP"
-else
-    echo "error: cannot SSH to agent at $AGENT_IP"
+    echo "error: SSH access $TENANT_HOST"
     exit
 fi
 
 echo "> generating the executables and whitelist"
-if [ ! -f imabursts-execs.tar.gz ]; then
-    tmp=$(mktemp -d)
-    cd $tmp
-    rm -f imabursts-whitelist.txt
-    for i in $(seq 1 $(($BURST_LEN * $BURST_CNT))); do
-        echo "#!/bin/bash" > helloworld$i
-        echo "echo hello, world number $i!" >> helloworld$i
-        chmod u+x helloworld$i
-        sha1sum helloworld$i \
-            | sed "s/helloworld/\/usr\/local\/bin\/helloworld/" \
-            >> imabursts-whitelist.txt
-    done
-    tar -cf imabursts-execs.tar.gz helloworld*
-    cd -
-    mv $tmp/imabursts-execs.tar.gz $tmp/imabursts-whitelist.txt .
-    rm -rf $tmp
-else
-    echo "> INFO: using cached executables"
-fi
+tmp=$(mktemp -d)
+cd $tmp
+for i in $(seq 1 $(($BURST_LEN * $BURST_CNT))); do
+	echo "#!/bin/bash" > helloworld$i
+	echo "echo hello, world number $i!" >> helloworld$i
+	chmod u+x helloworld$i
+	sha1sum helloworld$i \
+		| sed "s/helloworld/\/usr\/local\/bin\/helloworld/" \
+    		>> imabursts-whitelist.txt
+done
+tar -cf imabursts-execs.tar.gz helloworld*
+cd -
+mv $tmp/imabursts-execs.tar.gz $tmp/imabursts-whitelist.txt .
+rm -rf $tmp
+unset tmp
 
 echo "> uploading the whitelist to the tenant"
-scp imabursts-whitelist.txt root@$TENANT_IP:
+scp imabursts-whitelist.txt $TENANT_HOST:
 
 echo "> uploading and launching the update script on the tenant"
-scp imabursts-update-whitelist.sh root@$TENANT_IP:
-ssh root@$TENANT_IP ./imabursts-update-whitelist.sh \
+scp imabursts-update-whitelist.sh $TENANT_HOST:
+ssh $TENANT_HOST ./imabursts-update-whitelist.sh \
     $IMA_WHITELIST_PATH imabursts-whitelist.txt \
     $IMA_EXCLUDE_PATH $VERIFIER_IP $AGENT_IP $AGENT_UUID
 
