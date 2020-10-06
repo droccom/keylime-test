@@ -12,9 +12,9 @@ LOGTAIL=$1; shift
 echo "> testing SSH connections"
 ssh -q $SSH_VERIFIER exit
 if [ $? -eq 0 ]; then
-    echo "OK: can SSH to verfifier at $SSH_VERIFIER"
+    echo "OK: SSH access $SSH_VERIFIER"
 else
-    echo "error: cannot SSH to verifier at $SSH_VERIFIER"
+    echo "error: SSH access to $SSH_VERIFIER"
     exit
 fi
 

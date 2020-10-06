@@ -18,8 +18,8 @@ echo "deployed agents:"
 ${LOGCMD} | grep "adding agent" | sort | uniq | wc -l
 
 echo
-echo "healthy agents on latest $nht IMA logs:"
-${LOGCMD} | grep "Checking IMA" | tail -n $LOGTAIL | awk '{print $14}' | sort | uniq
+echo "healthy agents over latest $LOGTAIL IMA logs:"
+${LOGCMD} | grep "Checking IMA" | tail -n $LOGTAIL | awk '{print $14}' | sort | uniq | wc -l
 
 echo
 echo "failed agents:"
@@ -27,3 +27,8 @@ for a in $(docker logs keylime_verifier | grep "failed, stopping polling" | awk 
     echo "failing agent: $a"
     ${LOGCMD} | grep $a | tail -n 2
 done
+
+echo
+echo "latest log entry:"
+${LOGCMD} | tail -n 1
+
