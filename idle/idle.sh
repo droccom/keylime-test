@@ -15,7 +15,7 @@ else
 fi
 
 echo "deployed agents:"
-${LOGCMD} | grep "adding agent" | sort | uniq | wc -l
+${LOGCMD} | grep "adding agent" | awk '{print $16}' | sort | uniq | wc -l
 
 echo
 echo "healthy agents over latest $LOGTAIL IMA logs:"
