@@ -22,5 +22,4 @@ echo "> uploading and launching the test script on the verifier"
 TMPDIR="$(ssh $SSH_VERIFIER mktemp -d)"
 scp klhc.sh $SSH_VERIFIER:$TMPDIR
 cmd="ssh -t $SSH_VERIFIER watch $TMPDIR/klhc.sh $MODE $LOGTAIL"
-echo $cmd
-$cmd
+echo $cmd && eval $cmd
