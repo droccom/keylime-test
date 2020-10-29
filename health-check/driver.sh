@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -e
+
 if [ $# -lt 3 ]; then
-    echo "usage: $0 [USER@]VERIFIER_IP BAREMETAL|DOCKER LOGTAIL"
+    echo "usage: $0 [USER@]VERIFIER_IP BAREMETAL|DOCKER|EXTLOGS LOGTAIL"
     exit
 fi
 
@@ -18,8 +20,17 @@ else
     exit
 fi
 
+if [[ $MODE=="EXTLOGS" && -z ${EXTLOGS_PREFIX+x} ]]; then
+    echo "EXTLOGS_PREFIX must be defined for $MODE mode"
+    exit
+fi
+
+
+echo "***DBG MODE=$MODE"
+echo "***DBG EXTLOGS_PREFIX=$EXTLOGS_PREFIX"
+
 echo "> uploading and launching the test script on the verifier"
 TMPDIR="$(ssh $SSH_VERIFIER mktemp -d)"
 scp klhc.sh $SSH_VERIFIER:$TMPDIR
-cmd="ssh -t $SSH_VERIFIER watch $TMPDIR/klhc.sh $MODE $LOGTAIL"
+cmd="ssh -t $SSH_VERIFIER 'export EXTLOGS_PREFIX=\"$EXTLOGS_PREFIX\"; watch $TMPDIR/klhc.sh $MODE $LOGTAIL'"
 echo $cmd && eval $cmd
