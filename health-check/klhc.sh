@@ -21,27 +21,48 @@ elif [ $MODE == "EXTLOGS" ]; then
         echo "EXTLOGS_PREFIX must be defined for $MODE mode"
         exit
     fi
-    CMD_PREFIX="sudo cat ${EXTLOGS_PREFIX}/keylime_verifier-*.log" 
-    CMD_ADDED_AGENTS="$CMD_PREFIX | grep \"adding agent\" | awk '{print \$21}'"
+    CMD_ADDED_AGENTS="sudo grep \"adding agent\" ${EXTLOGS_PREFIX}/keylime_verifier-*.log | awk '{print \$21}'"
 fi
 
-echo "deployed agents:"
+echo "registered agents:"
 cmd="$CMD_ADDED_AGENTS | sort | uniq | wc -l"
 eval $cmd
 
 echo
-echo "healthy agents over latest $LOGTAIL IMA logs:"
-cmd="${CMD_PREFIX} | grep \"Checking IMA\" | tail -n $LOGTAIL | awk '{print \$14}' | sort | uniq | wc -l"
+echo "healthy agents over latest $LOGTAIL per-verifier IMA logs:"
+if [ $MODE == "DOCKER" ]; then
+    cmd="${CMD_PREFIX} | grep \"Checking IMA\" | tail -n $LOGTAIL | awk '{print \$14}' | sort | uniq | wc -l"
+elif [ $MODE == "BAREMETAL" ]; then
+    cmd="${CMD_PREFIX} | grep \"Checking IMA\" | tail -n $LOGTAIL | awk '{print \$9}' | sort | uniq | wc -l"
+elif [ $MODE == "EXTLOGS" ]; then
+    cmd="sudo tail -n $LOGTAIL ${EXTLOGS_PREFIX}/keylime_verifier-*.log | grep \"Checking IMA\" | awk '{print \$19}' | sort | uniq | wc -l"
+fi
 eval $cmd
 
 echo
 echo "failed agents:"
-for a in $($CMD_PREFIX | grep "failed, stopping polling" | awk '{print $9}'); do
-    echo "failing agent: $a"
-    ${CMD_PREFIX} | grep $a | tail -n 2
-done
+if [ $MODE == "DOCKER" ]; then
+    for a in $($CMD_PREFIX | grep "failed, stopping polling" | awk '{print $9}'); do
+        echo "failing agent: $a"
+    	${CMD_PREFIX} | grep $a | tail -n 2
+    done
+elif [ $MODE == "BAREMETAL" ]; then
+    for a in $($CMD_PREFIX | grep "failed, stopping polling" | awk '{print $4}'); do
+        echo "failing agent: $a"
+    	${CMD_PREFIX} | grep $a | tail -n 2
+    done
+elif [ $MODE == "EXTLOGS" ]; then
+    for a in $(sudo grep "failed, stopping polling" ${EXTLOGS_PREFIX}/keylime_verifier-*.log | awk '{print $9}'); do
+        echo "failing agent: $a"
+    	sudo grep $a ${EXTLOGS_PREFIX}/keylime_verifier-*.log | tail -n 2
+    done
+fi
 
 echo
 echo "latest log entry:"
-${CMD_PREFIX} | tail -n 1
-
+if [[ $MODE == "DOCKER" || $MODE == "BAREMETAL" ]]; then
+    cmd="${CMD_PREFIX} | tail -n 1"
+elif [ $MODE == "EXTLOGS" ]; then
+    cmd="sudo tail -n 1 ${EXTLOGS_PREFIX}/keylime_verifier-*.log | tail -n 1"
+fi
+eval $cmd
