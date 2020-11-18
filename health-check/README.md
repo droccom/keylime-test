@@ -4,7 +4,9 @@ This test monitors the health status of a Keylime deployment.
 
 ## Operations
 
-The top-level script is `driver.sh` and it is operated as follows: 
+The top-level script is `driver.sh` and it is operated as follows.
+
+### DOCKER or BAREMETAL mode
 
 ```bash
 ./driver.sh user@100.64.8.10 DOCKER 20
@@ -13,6 +15,17 @@ The top-level script is `driver.sh` and it is operated as follows:
 - `user@100.64.8.10` is the SSH command line to access the verifier
 - `DOCKER` denotes Keylime components are running in docker containers (alt. `BAREMETAL` to denote they run as plain services)
 - `20` is the tail length at which logs are scanned for unhealthy agents (rule of thumb: twice the number of agents)
+
+### EXTLOGS mode
+
+```bash
+EXTLOGS_PREFIX="/repo/root/var/log/remote/*" ./driver.sh 10.1.40.30 EXTLOGS 200
+```
+
+- `10.1.40.30` is the IP of the host where logs are stored
+- `EXTLOGS_PREFIX` is the path string for the logs folders
+
+### Output
 
 The output is continuously updated (i.e. `watch`) and looks like the following:
 
