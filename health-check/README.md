@@ -14,7 +14,7 @@ The top-level script is `driver.sh` and it is operated as follows.
 
 - `user@100.64.8.10` is the SSH command line to access the verifier
 - `DOCKER` denotes Keylime components are running in docker containers (alt. `BAREMETAL` to denote they run as plain services)
-- `20` is the tail length at which logs are scanned for unhealthy agents (rule of thumb: twice the number of agents)
+- `20` is the tail length at which logs are scanned for unhealthy agents (rule of thumb: double the number of agents-per-verifier)
 
 ### EXTLOGS mode
 
