@@ -25,12 +25,8 @@ if [[ $MODE=="EXTLOGS" && -z ${EXTLOGS_PREFIX+x} ]]; then
     exit
 fi
 
-
-echo "***DBG MODE=$MODE"
-echo "***DBG EXTLOGS_PREFIX=$EXTLOGS_PREFIX"
-
 echo "> uploading and launching the test script on the verifier"
 TMPDIR="$(ssh $SSH_VERIFIER mktemp -d)"
 scp klhc.sh $SSH_VERIFIER:$TMPDIR
-cmd="ssh -t $SSH_VERIFIER 'export EXTLOGS_PREFIX=\"$EXTLOGS_PREFIX\"; watch $TMPDIR/klhc.sh $MODE $LOGTAIL'"
+cmd="ssh $SSH_VERIFIER 'export EXTLOGS_PREFIX=\"$EXTLOGS_PREFIX\"; $TMPDIR/klhc.sh $MODE $LOGTAIL' > klhc-$(date +%s).out"
 echo $cmd && eval $cmd
