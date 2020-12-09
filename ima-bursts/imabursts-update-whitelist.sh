@@ -2,17 +2,18 @@
 
 # this runs on the agent
 
-if [ $# -lt 6 ]; then
-    echo "usage: $0 WL_BASE WL_UPDATE EXCLUDE VERIFIER_IP AGENT_IP AGENT_UUID"
+if [ $# -lt 4 ]; then
+    echo "usage: $0 WL_UPDATE VERIFIER_IP AGENT_IP AGENT_UUID"
     exit
 fi
 
-WL_BASE=$1; shift
 WL_UPDATE=$1; shift
-EXCLUDE=$1; shift
 VERIFIER_IP=$1; shift
 AGENT_IP=$1; shift
 AGENT_UUID=$1; shift
+
+WL_BASE=/tmp/whitelist_${AGENT_UUID}.txt
+WL_EXCLUDE="/ima_exclude.txt" # on the tenant
 
 # copy whitelist from container
 WL_BASE_HOST=$(mktemp)
@@ -39,9 +40,14 @@ WL_EXT_DOCKER=$(docker exec keylime_deployer mktemp)
 docker cp $WL_EXT keylime_deployer:$WL_EXT_DOCKER
 rm $WL_EXT
 
-docker exec -i keylime_deployer keylime_tenant \
-    --cert /var/lib/keylime/ca \
+KL_SECRET_FILE=$(docker exec keylime_deployer mktemp)
+cmd="docker exec keylime_deployer keylime_tenant \
+    -f $KL_SECRET_FILE \
     -v $VERIFIER_IP \
     --uuid $AGENT_UUID -t $AGENT_IP \
-    --whitelist $WL_EXT_DOCKER --exclude $EXCLUDE \
-    -c update
+    --whitelist $WL_EXT_DOCKER --exclude $WL_EXCLUDE \
+    -c update"
+echo $cmd
+
+#DBG
+#$cmd
