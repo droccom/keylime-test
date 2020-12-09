@@ -1,5 +1,7 @@
 #!/bin/bash
 
+VERBOSE=1
+
 set -e
 
 EGREP_UUID="egrep -o [A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9]+-[A-Z0-9#]+"
@@ -30,7 +32,7 @@ CMD_ADDED_AGENTS="$CMD_PREFIX | $EGREP_UUID"
 
 echo "registered agents:"
 cmd="$CMD_ADDED_AGENTS | sort | uniq | wc -l"
-echo $cmd
+if [ "$VERBOSE" == 1 ]; then echo $cmd; fi
 eval $cmd
 
 echo
@@ -43,7 +45,7 @@ elif [ $MODE == "EXTLOGS" ]; then
     CMD_PREFIX="sudo tail -n $LOGTAIL ${EXTLOGS_PREFIX}/keylime_verifier-*.log | $EGREP_IMA"
 fi
 cmd="$CMD_PREFIX | $EGREP_UUID | sort | uniq | wc -l"
-echo $cmd
+if [[ "$VERBOSE" == 1 ]]; then echo $cmd; fi
 eval $cmd
 
 echo
@@ -67,14 +69,16 @@ fi
 
 echo
 echo "latest log entry:"
-if [[ $MODE == "DOCKER" ]]; then
+if [ $MODE == "DOCKER" ]; then
     cmd="docker logs keylime_verifier | tail -n 1"
-elif [[ $MODE == "BAREMETAL" ]]; then
+elif [ $MODE == "BAREMETAL" ]; then
     cmd="journalctl --no-pager -u keylime_verifier.service | tail -n 1"
 elif [ $MODE == "EXTLOGS" ]; then
     cmd="sudo tail -n 1 $(ls -t ${EXTLOGS_PREFIX}/keylime_verifier-*.log | head -n 1)"
 fi
-echo $cmd
+if [ "$VERBOSE" == 1 ]; then echo $cmd; fi
 eval $cmd
 
-ls -lt ${EXTLOGS_PREFIX}/keylime_verifier-*.log  
+if [[ $MODE == "EXTLOGS" && "$VERBOSE" == 1 ]]; then
+    ls -lt ${EXTLOGS_PREFIX}/keylime_verifier-*.log  
+fi
