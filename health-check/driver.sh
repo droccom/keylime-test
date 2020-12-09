@@ -20,7 +20,7 @@ else
     exit
 fi
 
-if [[ $MODE=="EXTLOGS" && -z ${EXTLOGS_PREFIX+x} ]]; then
+if [[ "$MODE" == "EXTLOGS" && -z ${EXTLOGS_PREFIX+x} ]]; then
     echo "EXTLOGS_PREFIX must be defined for $MODE mode"
     exit
 fi
@@ -28,5 +28,7 @@ fi
 echo "> uploading and launching the test script on the verifier"
 TMPDIR="$(ssh $SSH_VERIFIER mktemp -d)"
 scp klhc.sh $SSH_VERIFIER:$TMPDIR
-cmd="ssh $SSH_VERIFIER 'export EXTLOGS_PREFIX=\"$EXTLOGS_PREFIX\"; $TMPDIR/klhc.sh $MODE $LOGTAIL' > klhc-$(date +%s).out"
+logfile=$(mktemp)
+cmd="ssh $SSH_VERIFIER 'export EXTLOGS_PREFIX=\"$EXTLOGS_PREFIX\"; $TMPDIR/klhc.sh $MODE $LOGTAIL' > $logfile"
 echo $cmd && eval $cmd
+ln -sf $logfile klhc-latest.log
