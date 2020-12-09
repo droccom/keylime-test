@@ -4,9 +4,6 @@ BURST_LEN=10
 BURST_CNT=2
 BURST_WAIT_LIMIT=10
 
-IMA_WHITELIST_PATH="/KL/keylime/archive/ima/whitelist.txt" # on the tenant
-IMA_EXCLUDE_PATH="/ima_exclude.txt" # on the tenant
-
 if [ $# -lt 4 ]; then
     echo "usage: $0 [user@]TENANT_HOST VERIFIER_IP AGENT_IP AGENT_UUID"
     exit
@@ -43,14 +40,21 @@ mv $tmp/imabursts-execs.tar.gz $tmp/imabursts-whitelist.txt .
 rm -rf $tmp
 unset tmp
 
+if [ ! grep imabursts-fire imabursts-whitelist.txt ]; then
+    echo "> adding imabursts-fire entry to the whitelist"
+    sha1sum imabursts-fire.sh \
+            | sed "s/imabursts-fire\.sh/\/usr\/local\/bin\/imabursts-fire/" \
+            >> imabursts-whitelist.txt
+fi
+
 echo "> uploading the whitelist to the tenant"
 scp imabursts-whitelist.txt $TENANT_HOST:
 
 echo "> uploading and launching the update script on the tenant"
-scp imabursts-update-whitelist.sh $TENANT_HOST:
-ssh $TENANT_HOST ./imabursts-update-whitelist.sh \
-    $IMA_WHITELIST_PATH imabursts-whitelist.txt \
-    $IMA_EXCLUDE_PATH $VERIFIER_IP $AGENT_IP $AGENT_UUID
+scp imabursts-update-whitelist.sh root@$TENANT_IP:
+ssh root@$TENANT_IP ./imabursts-update-whitelist.sh \
+    imabursts-whitelist.txt \
+    $VERIFIER_IP $AGENT_IP $AGENT_UUID
 
 # TODO refine
 echo "> waiting until whitelist has been updated"
@@ -59,6 +63,5 @@ sleep 10
 echo "> uploading and launching the executables on the agent"
 scp imabursts-execs.tar.gz imabursts-fire.sh root@$AGENT_IP:
 ssh root@$AGENT_IP tar -xf imabursts-execs.tar.gz -C /usr/local/bin
-ssh root@$AGENT_IP ./imabursts-fire.sh \
-    /usr/local/bin/helloworld \
-    $BURST_LEN $BURST_CNT $BURST_WAIT_LIMIT
+ssh root@$AGENT_IP mv ./imabursts-fire.sh /usr/local/bin/imabursts-fire
+ssh root@$AGENT_IP imabursts-fire helloworld $BURST_LEN $BURST_CNT
